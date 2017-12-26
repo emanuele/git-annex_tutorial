@@ -91,7 +91,7 @@ is enabled for the group (`g+s`), so that all future files and
 directories created inside `/labdata` will automatically inherit the
 group `dataowners` and the `setgid` bit.
 	
-	git init --shared=all
+	git init --shared=group
 	git annex init storage-server
 
 This second group of commands creates the `git` repository and the
@@ -99,7 +99,7 @@ additional `git-annex` part of it. Notice that, the `git-annex` part
 of the repository can only be initialized within an existing `git`
 repository. In order to let the repository be group-writable and
 accessible to everyone, the initialization of the `git` repository
-requires [`--shared=all`](https://git-scm.com/docs/git-init). This
+requires [`--shared=group`](https://git-scm.com/docs/git-init). This
 will properly set permissions within `/labdata/.git/`. The
 initialization of `git-annex` creates a `/labdata/.git/annex/`
 directory, called the *annex*, where `git-annex` stores all its
@@ -120,13 +120,27 @@ main ways:
   original location of the file. Only the symbolic link is added to
   the `git` git repository, while `git-annex` keeps track of the
   content. From the user perspective, the initial file is still
-  accessible, through the link, in read-only mode. 
+  accessible, through the link, in read-only mode. Notice that, when
+  cloning this repository, only the symbolic link of this file will be
+  present and not its content, unless explicitly requested.
+  * Or via `git add <file>` and `git commit -m <message>`. In this
+    case the file is added to the `git` repository and *not* to the
+    annex. Notice that, when cloning this repository, a copy of this
+    file will be present, as always with `git`.
 * From remote repositories, through `git push` or `git annex sync`. In
   this second case, the repository must be configured properly, as
   explained below.
+  
+Using `git annex add <file>` instead of `git add <file>` can be
+decided for each file, individually, and depends on the purpose of the
+file and of the repository. Typically, code should be added via `git
+add <file>` and data via `git annex add <file>`. Nevertheless, it is
+possible to use `git annex add <file>` for everything. If, at a later
+stage, a file needs to be moved from the `git` repository to the
+annex, or viceveresa, 
 
-Here follows an example trascript of these operations, where the file
-`foo` is added to the annex:
+Here follows an example transcript of what happens when executing `git
+annex add <file>` on a file `foo` present in the repository:
   
     > ls -al
 	total 16
@@ -197,13 +211,16 @@ TODO: here we miss some information about how to tailor remotes like:
 
 
 ### Publishing the repository on `github.com`
-TODO
+TODO 
+
+The idea is to keep a copy of the repository on github, without the
+contents of the annex, so that it is more visible and can be easily
+cloned by anonymous users. Moreover, it can be set up so that content
+can be retrieved via `git annex get <file>` leveraging the access to
+the storage-server and/or the public access for the web.
 
 
-### Common issues
-
-
-#### Moving content from `git-annex` to `git`
+### Moving content from `git-annex` to `git`
 After populating and using the repository, it is common to realize
 that it may not be smart to have *all* files stored with `git-annex`
 and that is would be better to have them simply stored in `git`. The
