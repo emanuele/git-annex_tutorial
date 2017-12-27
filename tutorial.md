@@ -410,26 +410,28 @@ needed with `git annex drop <file>`:
 	git annex group . manual
 
 At this point, the contributor can create new files and add them to
-the repository, via `git annex add <file>` and commit that:
+the annex, via `git annex add <file>` and commit that:
 
     ...creating new files...
 	git annex add <newfiles>
 	git commit -m "created <newfiles>
 
 At this point, local changes can be sent to the repository on the
-storage server with `git push` but the content will not be sent. In
-order to do that, `git-annex` provides the command `git annex copy
-<newfiles> --to=origin`. Notice that it is sufficient to indicate the
-name of the directory, when copying, and `git annex` will figure out
-what content will need to be copied, e.g.:
+storage server with `git push` but the content will not be sent, only
+the symbolic link and some metadata. In order to copy the content of
+the file to the annex on the storage server, `git-annex` provides the
+command `git annex copy <newfiles> --to=origin`. Notice that, instead
+of indicating the specific filename, it is sufficient to indicate the
+name of the directory with the new files, when copying, and `git
+annex` will figure out what content will need to be copied, e.g.:
 
     git annex copy . --to=origin
 
 Since pushing content to a repository often requires to pull first and
 merge changes, then `git-annex` provides a more convenient way to
-perform all operatations, through the `sync` command:
+perform all these operatations, through the `sync` command:
 
-	git annex sync --content
+	git annex sync origin --content
 
 Internally, `git annex sync --content` performs the following steps:
 1. `git commit`
@@ -437,17 +439,18 @@ Internally, `git annex sync --content` performs the following steps:
 3. `git merge`
 4. `git push`
 5. `git copy . --to=origin`
+6. `git annex get .`
 
-Notice that the last step will be avoided if `--content` is omitted
-when syncing. Moreover, had the standard group *manual* not being set,
-then all files available on the storage server would have been copied
-locally. If that happens, interrupting the retrieval with `CTRL-C` is
-safe.
+Notice that the last two steps will be avoided if `--content` is
+omitted. Moreover, had the standard group *manual* not being set in
+the local repository, then all files available on the storage server
+would have been copied locally. Anyway, if that happens, interrupting
+the retrieval with `CTRL-C` is safe.
 
 
 ### Editing pre-existing files
 If a `<file>` is stored with in the annex and changes to it needs to
-be made, the file must be unlocked first:
+be made, then the file must be unlocked first:
 
     git annex unlock <file>
 	...edit...edit...edit...
@@ -456,7 +459,7 @@ be made, the file must be unlocked first:
 
 Notice that `git annex unlock <file>` removes the symbolic link and
 copies the content of the file in its place, with write
-permission. Notice that this is a second copy of the file. After
+permission. This is a second copy of the file because the one . After
 changing the file, `git-annex add` and `git commit` can be performed
 as usual. Notice that, if you need to frequently change a file, it may
 be more convenient to store it with `git` instead of `git-annex`.
