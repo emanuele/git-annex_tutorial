@@ -109,6 +109,7 @@ explanation:
     cd /
     mkdir labdata
 	addgrup dataowners
+	adduser contributor dataowners
 	chgrp dataowners labdata
 	chmod g+rwx labdata
 	chmod o+rx-w
@@ -117,10 +118,12 @@ explanation:
 	
 This first group of commands creates the directory to host the
 repository `/labdata`, creates a new system group `dataowners` and
-sets such group to `/labdata`, with write permissions. Additionally,
-read (`r`), write (`w`) and access (`x`) permissions are granted to
-the group (`g+rwx`) and read and access (but not write) permissions
-are granted to everyone else (`o+rx-w`). Finally, the [`setgid`
+sets such group to `/labdata`, with write permissions. Then, the user
+`contributor` is added to that group - and others may be added in the
+same way. Additionally, read (`r`), write (`w`) and access (`x`)
+permissions are granted to the group (`g+rwx`) and read and access
+(but not write) permissions are granted to everyone else
+(`o+rx-w`). Finally, the [`setgid`
 permission](https://en.wikipedia.org/wiki/Setuid#setuid_and_setgid_on_directories)
 is enabled for the group (`g+s`), so that all future files and
 directories created inside `/labdata` will automatically inherit the
@@ -196,10 +199,24 @@ annex add <file>` on a file `foo` present in the repository:
      create mode 120000 foo
     > ls -al .git/annex/objects/g7/9v/SHA256E-s4--7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730/SHA256E-s4--7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730
     -rw-rw-rw- 1 ele dataowners 4 dic 26 16:19 .git/annex/objects/g7/9v/SHA256E-s4--7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730/SHA256E-s4--7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730
-	
 
 
-### Allowing content creation from remote repositories
+### Branches created by `git-annex`
+TODO: explain the branches below
+
+    > git branch -a
+      git-annex
+    * master
+      synced/master
+      remotes/origin/HEAD -> origin/master
+      remotes/origin/git-annex
+      remotes/origin/master
+      remotes/origin/synced/git-annex
+      remotes/origin/synced/master
+
+
+
+### [Allowing content creation from remote repositories](allow-remote-content)
 Content and changes can be created on remote clones of the repository,
 i.e. local computers of lab members and collaborators. Such contents
 and changes need to be pushed to the storage-server, in order to be
@@ -282,7 +299,7 @@ can be retrieved via `git annex get <file>` leveraging the access to
 the storage-server and/or the public access for the web.
 
 
-### Moving content from `git-annex` to `git`
+### Moving content from `git-annex` to `git` and viceversa
 After populating and using the repository, it is common to realize
 that it may not be smart to have *all* files stored with `git-annex`
 and that is would be better to have them simply stored in `git`. The
@@ -294,37 +311,155 @@ following commands migrate files from `git-annex` to `git`:
 
 Notice that `git unannex <file>` does not need a commit.
 
+Viceversa: TODO.
+
+
 
 #### Problems with permissions when pushing/syncing
 TODO
 
 
 
-## `git-annex` for data creators
+## `git-annex` for users
+In this section, we describe the use of `git-annex` from the point of
+view of users, when the centralized repository is already
+available. We make a distinction between users that just access the
+repository to obtain the data and, from time to time, the updates,
+from users that contribute to the repository, by creating new content
+or code to be sent to the central repository.
 
-    git clone creator1@storage-server:/labdata
-	git annex init creator1-desktop
-	# set the repository to not retrieve additional content when syncing:
+As user, the first action to do is to clone the repository hosted on
+the storage server. Notice that repository may be reached in several
+ways, like via SSH, if you have an account on the storage server, or
+via HTTP, if the repository has been published with a web server, or
+via Github if this option has been set up. In this last case, the
+content of the files in the repository is not available and at least
+one of the other means should be available to reach the content.
+
+    git clone user@storage-server:/labdata
+
+The directory `labdata/` is then created, with all the tree of
+directories and symbolic links to the (missing) content of the files,
+if they had been added with `git annex add <file>`, or the actual
+files, if added with `git add <file>`. Additionally, as in every `git`
+repository, it is present the `labdata/.git` directory hosting all the
+`git` history and internal files. Notice that the directory
+`labdata/.git/annex`, created by git annex, is not present yet. Still,
+the information necessary to `git-annex` to retrieve the content of
+the files in the annex is already available because it is stored in
+the `git-annex` branch. The list of all available branches shows it:
+
+	> git branch -a
+    * master
+      remotes/origin/HEAD -> origin/master
+      remotes/origin/git-annex
+      remotes/origin/master
+      remotes/origin/synced/git-annex
+      remotes/origin/synced/master
+
+For this reason, the content of the files currently appearing just as
+broken links can be easily retrieved with:
+
+    git annex get <file>
+
+where `<file>` is a filename, a directory, or an expression with
+wildcards that address the content we require.
+
+From time to time, the user can retrieve updates of the repository by
+executing:
+
+    git pull
+
+The user can also ask `git-annex` information on where to find the
+content of a given file:
+
+    git annex whereis <file>
+
+
+### data/code contributors
+If a user is also a contributor to the repository, then he/she can
+create new content and push it to the repository on the storage
+server. In order to do that, some additional steps should be done on
+the local clone of the repository. For clarity, the following
+instructions start from cloning the repository as `contributor`:
+
+    git clone contributor@storage-server:/labdata
+	cd labdata/
+	git annex init contributor1-desktop
+
+here, `git annex init <label>` is not mandatory but it is good
+practice for a collaborator to add a human-readable label to describe
+the local repository, because it will show up in the information
+stored by `git-annex` and shared with others.
+
+A second important step is to inform `git-annex` that the local
+repository should only get the content explicitly requested by the
+collaborator. This is important when, later, the contributor will send
+new content to the main repository on the storage server, with `git
+annex sync`. `git annex` provides a rich and flexible set of
+expressions to set the preferences of content automatically retrieved
+during certain operations. See [allow-remote-content] for a more
+detailed explanation. Here, the main step is to set the preferences of
+the content for the local repository to a standard group, called
+`manual`, meaning that content will only be manually retrieved by the
+contributor via `git annex get <file>` and manually removed when
+needed with `git annex drop <file>`:
+
+	cd labdata/
 	git annex wanted . standard
 	git annex group . manual
 
+At this point, the contributor can create new files and add them to
+the repository, via `git annex add <file>` and commit that:
+
+    ...creating new files...
+	git annex add <newfiles>
+	git commit -m "created <newfiles>
+
+At this point, local changes can be sent to the repository on the
+storage server with `git push` but the content will not be sent. In
+order to do that, `git-annex` provides the command `git annex copy
+<newfiles> --to=origin`. Notice that it is sufficient to indicate the
+name of the directory, when copying, and `git annex` will figure out
+what content will need to be copied, e.g.:
+
+    git annex copy . --to=origin
+
+Since pushing content to a repository often requires to pull first and
+merge changes, then `git-annex` provides a more convenient way to
+perform all operatations, through the `sync` command:
+
+	git annex sync --content
+
+Internally, `git annex sync --content` performs the following steps:
+1. `git commit`
+2. `git pull`
+3. `git merge`
+4. `git push`
+5. `git copy . --to=origin`
+
+Notice that the last step will be avoided if `--content` is omitted
+when syncing. Moreover, had the standard group *manual* not being set,
+then all files available on the storage server would have been copied
+locally. If that happens, interrupting the retrieval with `CTRL-C` is
+safe.
 
 
-### Editing files
-If a `<file>` is stored with `git annex` and changes to it needs to be
-made, it must be unlocked first, before making the changes:
+### Editing pre-existing files
+If a `<file>` is stored with in the annex and changes to it needs to
+be made, the file must be unlocked first:
 
     git annex unlock <file>
-	edit...edit...edit
+	...edit...edit...edit...
 	git annex add <file>
 	git commit -m "updated <file>"
 
-`git annex unlock <file>` removes the symbolic link and copies the
-content of the file in its place, with write permission. Notice that
-this is a second copy of the file. After changing the file, `git-annex
-add` and `git commit` can be performed as usual. Notice that, if you
-need to frequently change a file, it may be more convenient to store
-it with `git` instead of `git-annex`.
+Notice that `git annex unlock <file>` removes the symbolic link and
+copies the content of the file in its place, with write
+permission. Notice that this is a second copy of the file. After
+changing the file, `git-annex add` and `git commit` can be performed
+as usual. Notice that, if you need to frequently change a file, it may
+be more convenient to store it with `git` instead of `git-annex`.
 
 
 #### Issue: Changing a file without unlocking first
