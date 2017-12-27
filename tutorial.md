@@ -187,14 +187,18 @@ The storage-server is meant to keep copies of all files in the
 repository. When content is created remotely, it is very important to
 tell the storage-server to enforce this desideratum, when operations
 like `git annex sync` are performed (see TODO). In order to enforce
-such behavior and other similar ones, `git annex` provides rich
-expressions to be set, see
-https://git-annex.branchable.com/preferred_content/ . But it also
-offers standard groups of preferences, as described in
-https://git-annex.branchable.com/preferred_content/standard_groups/
-. The commands above tells to all the repository to use a standard
-group of preferences called *backup*, which means "All content is
-wanted. Even content of old/deleted files."
+such behavior and other similar ones, `git annex` provides [rich
+expressions](https://git-annex.branchable.com/preferred_content/) to
+be set, see. But it also offers [standard groups of
+preferences](https://git-annex.branchable.com/preferred_content/standard_groups/). The
+commands above tells to all the repository to use a standard group of
+preferences called *backup*, which means "All content is wanted. Even
+content of old/deleted files."
+
+
+#### Changing/Fixing standard groups
+
+    git annex ungroup . backup
 
 
 ### Adding public accessibility from the web
