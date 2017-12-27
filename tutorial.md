@@ -1,6 +1,6 @@
 # `git-annex` tutorial: sharing data and code in the Lab and outside
 
-In this tutorial we introduce
+In his tutorial we introduce
 [`git-annex`](https://git-annex.branchable.com) and its use within a
 research laboratory to help share data and code among lab members,
 external collaborators and anonymous users. `git-annex` is a software
@@ -15,6 +15,18 @@ common to make mistakes, as it was for us. For this reason, in this
 tutorial, we also describe common errors and how to recover from
 them. Notice that, basic familiarity with `git` is assumed as a
 pre-requisite for this tutorial.
+
+The tutorial is structured as follows. First we describe the scenario
+in which `git-annex` is used. Then, we provide some preliminary
+information about what `git-annex` is and technical details. After
+that, we describe how to set up a centralized repository that will
+host a copy of all data. This is the main part of the tutorial, in
+which we describe how to make the repository easily accessible from a
+web server and from Github. The last two parts of the tutorial
+describe the use of the repository from the point of view of content
+creators, i.e. those having the rights to add new content to the
+repository from remote, and from the point of view of anonymous users
+that just need to have an updated copy of some of the data.
 
 
 ## The Lab scenario
@@ -34,7 +46,6 @@ and collaborators to get updates of data and code in a simple way.
 
 
 ## What is `git-annex`?
-
 Simply put, [`git-annex`](https://git-annex.branchable.com) is an
 extension of `git` that provides some extra functionalities:
 * Large files in the repository are not locally copied, when cloning
@@ -45,7 +56,31 @@ extension of `git` that provides some extra functionalities:
   are.
 * TODO
   
-  
+
+### Versions and other technical details
+In this tutorial we refer to `git-annex` version 6.20171211, on
+GNU/Linux machines using Ubuntu 16.04. As of this version of
+`git-annex`, the default format of the repository is **v5**. In
+future, we plan to [upgrade to
+v6](https://git-annex.branchable.com/upgrades/), following the default
+settings of `git-annex`. At that time, we plan to update the parts of
+this tutorial that are affected by this change.
+
+When issueing `git-annex` from the command line, two alternative ways
+can be used, either `git-annex` or `git annex`. To our knowledge,
+there is no difference between them.
+
+Until v5 of the repository format, `git-annex` uses certain filesystem
+features that may not be available on all filesystems, like symbolic
+links and FIFOs. For example, the FAT filesystem does not provide
+them. When initializing the repository with `git annex init` (see
+below for further details), a clear warning will appear on the screen,
+in case you are using such *crippled* filesystems. Nevertheless,
+`git-annex` has ways to (partially) address such problems. In this
+tutorial, we do not discuss such issues and we assume that a
+non-crippled filesystem is available, like the EXT4 filesystem,
+default on GNU/Linux systems.
+
 
 ### Alternatives to `git-annex`
 TODO
@@ -193,12 +228,35 @@ be set, see. But it also offers [standard groups of
 preferences](https://git-annex.branchable.com/preferred_content/standard_groups/). The
 commands above tells to all the repository to use a standard group of
 preferences called *backup*, which means "All content is wanted. Even
-content of old/deleted files."
+content of old/deleted files".
 
 
-#### Changing/Fixing standard groups
+#### More on standard groups
+If you want to check whether standard groups are enabled in the
+repository, you just need to use the commands above, without
+specifying `standard` and `backup`. The following trascript shows an
+example:
 
-    git annex ungroup . backup
+    > git annex wanted .
+	standard
+	> git annex group .
+	backup
+
+Notice that you can set multiple standard groups, whose effect is left
+as exercise to the reader. Continuing the previous example:
+
+    > git annex group . client
+    group . ok
+    (recording state in git...)
+    > git annex group .
+    client backup
+
+If you added a standard group by mistake and want remove it, you need
+to use `git annex ungroup`, as here:
+
+    > git annex ungroup . client
+	> git annex group .
+    backup
 
 
 ### Adding public accessibility from the web
@@ -304,5 +362,15 @@ adding and committing.
 ## Acknowledgment
 
 Thanks to [Michael Hanke's
-post](https://github.com/datalad/datalad/issues/335) for inspiring
+post](https://github.com/datalad/datalad/issues/335), for inspiring
 parts of this tutorial and showing interesting solutions.
+
+Thanks to Yaroslav Halchenko and Michael Hanke for their continuous
+effort in improving and maintaining
+[NeuroDebian](http://neuro.debian.net/) which, among many other
+things, provides Debian/Ubuntu repositories with the latest
+`git-annex`, within the package `git-annex-standalone`.
+
+A special thank to Joey Hess, author of `git-annex`, for the beautiful
+and intriguing piece of software that sometimes tease us like a
+puzzle, like `git` does.
