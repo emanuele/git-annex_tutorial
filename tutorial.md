@@ -307,7 +307,7 @@ following commands migrate files from `git-annex` to `git`:
 
     git unannex <file>
 	git add <file>
-	git come -m <message>
+	git commit -m <message>
 
 Notice that `git unannex <file>` does not need a commit.
 
