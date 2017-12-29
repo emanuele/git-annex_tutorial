@@ -303,10 +303,12 @@ Add new special remote via http.
 
 	git remote add httpdata HTTPURL/.git
     git annex initremote datasrc type=git location=HTTPURL/.git autoenable=true
+	git annex merge  # necessary?
 	git remote rm httpdata  # not needed anymore
 
 Note: after pulling/syncing in remote clones, `git annex init` should
-be re-run, according to the man page.
+be re-run, according to the man page. Maybe it is necessary to run
+`git annex enableremote datasrc` on the user computer. TODO.
 
 
 ### Publishing the repository on `github.com`
