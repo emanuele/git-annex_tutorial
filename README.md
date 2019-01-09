@@ -237,7 +237,11 @@ With this command, we allow remote users to *push* to the
 repository. Normally, this is not permitted, because the repository is
 *non bare*, i.e.  it has a working tree of files and directories,
 besides the `.git/` database. If you do not plan to push changes from
-remote, then you do not need this configuration. The second step is:
+remote, then you do not need this configuration. Notice that, if you
+push changes to the repository after enabling the previous
+configuration, the working tree of the repository will *not* be
+updated. See [below](#web-access) how to enable the automatic update
+of the working tree. The second step is:
 	
 	cd /labdata
     git annex wanted . standard
@@ -284,7 +288,7 @@ to use `git annex ungroup`, as here:
     backup
 
 
-### Adding public accessibility from the web
+### [Adding public accessibility from the web](#web-access)
 
 Information on how to access the repository when the storage server
 directory with the data is exposed via web server. 
