@@ -1,6 +1,6 @@
 # `git-annex` tutorial: sharing data and code in the Lab and outside
 
-In his tutorial we introduce
+In this tutorial we introduce
 [`git-annex`](https://git-annex.branchable.com) and its use within a
 research laboratory to help share data and code among lab members,
 external collaborators and anonymous users. `git-annex` is a software
